@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 Mem0 Chatbot</title>
+    <!-- Marked.js library for full markdown rendering support -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css?v=8">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <h1>🧠 Mem0 Chatbot</h1>
+            <p class="subtitle">Powered by Mem0 • Neo4j • Redis</p>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h3>⚙️ Settings</h3>
+                <div class="input-group">
+                    <label for="userId">User ID</label>
+                    <input type="text" id="userId" value="demo_user" placeholder="Enter your user ID">
+                </div>
+                
+                <div class="input-group" style="margin-top: 1rem;">
+                    <label for="sessionId">Session ID</label>
+                    <input type="text" id="sessionId" placeholder="Enter session ID or auto-generated">
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Collapsible Domain Catalog Section -->
+            <div class="collapsible-section">
+                <div class="collapsible-header" onclick="toggleDomainCatalog()">
+                    <span>📁 Domain Catalog</span>
+                    <span class="collapse-icon" id="domainCatalogIcon">▼</span>
+                </div>
+                <div class="collapsible-content" id="domainCatalogContent">
+                    <!-- Domain Action Buttons -->
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                        <button class="btn btn-catalog-add" onclick="openAddDomainModal()" style="flex: 1;">
+                            ADD
+                        </button>
+                        <button class="btn btn-catalog-update" onclick="openUpdateDomainModal()" style="flex: 1;">
+                            UPDATE
+                        </button>
+                        <button class="btn btn-catalog-delete" onclick="openDeleteDomainModal()" style="flex: 1;">
+                            DELETE
+                        </button>
+                    </div>
+
+                    <!-- Previously Added Domains Section -->
+                    <div id="previouslyAddedDomainsSection" style="margin-top: 0.75rem; display: none;">
+                        <label style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem; display: block;">Previously Added Domains:</label>
+                        <div id="previouslyAddedDomainsList" class="added-domains-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="viewMemories()">
+                    🔍 View Memories (LTM)
+                </button>
+                <button class="btn btn-danger" onclick="clearMemories()">
+                    🗑️ Clear Memories (LTM)
+                </button>
+                <button class="btn btn-warning" onclick="clearSession()">
+                    🧹 Clear Session (STM)
+                </button>
+                <button class="btn btn-secondary" onclick="clearChat()">
+                    🔄 Clear Chat
+                </button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="memory-list" id="memoryList"></div>
+        </aside>
+
+        <!-- Chat Area -->
+        <main class="chat-area">
+            <!-- Chat Header -->
+            <div class="chat-header">
+                <div class="chat-header-content">
+                    <div class="chat-title">
+                        <span class="robot-emoji">🤖</span>
+                        <h1>Mem0 Chatbot</h1>
+                    </div>
+                    <p class="chat-subtitle">Memory-Powered AI Agent • Neo4j + Redis</p>
+                </div>
+            </div>
+            
+            <!-- Messages Container -->
+            <div class="messages" id="messages">
+                <div class="welcome-message">
+                    <h2>How can I help you today?</h2>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <textarea 
+                    id="userInput" 
+                    placeholder=" Ask me anything..." 
+                    rows="1"
+                    onkeypress="handleKeyPress(event)"
+                ></textarea>
+                <button class="send-button" onclick="sendMessage()">
+                    <span id="sendIcon">Send</span>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for Adding Domain Catalog -->
+    <div id="addDomainModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Add New Domain Catalog</h3>
+                <button class="modal-close" onclick="closeAddDomainModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-input-group">
+                    <label for="addDomainName">Domain Name:</label>
+                    <input type="text" id="addDomainName" placeholder="e.g., healthcare, finance, travel" />
+                </div>
+
+                <div class="modal-input-group">
+                    <label for="addDomainCatalog">Domain Catalog Description:</label>
+                    <textarea id="addDomainCatalog" rows="6" placeholder="Enter detailed catalog description..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-cancel" onclick="closeAddDomainModal()">Cancel</button>
+                <button class="modal-btn modal-btn-success" onclick="submitAddDomain()">Add Domain</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Updating Domain Catalog -->
+    <div id="updateDomainModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Update Domain Catalog</h3>
+                <button class="modal-close" onclick="closeUpdateDomainModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-input-group">
+                    <label for="updateDomainName">Domain Name (to update):</label>
+                    <input type="text" id="updateDomainName" placeholder="e.g., healthcare" />
+                </div>
+
+                <div class="modal-input-group">
+                    <label for="updateDomainCatalog">New Catalog Description:</label>
+                    <textarea id="updateDomainCatalog" rows="6" placeholder="Enter new catalog description..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-cancel" onclick="closeUpdateDomainModal()">Cancel</button>
+                <button class="modal-btn modal-btn-primary" onclick="submitUpdateDomain()">Update Domain</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Deleting Domain Catalog -->
+    <div id="deleteDomainModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Delete Domain Catalog</h3>
+                <button class="modal-close" onclick="closeDeleteDomainModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-input-group">
+                    <label for="deleteDomainName">Domain Name (to delete):</label>
+                    <input type="text" id="deleteDomainName" placeholder="e.g., healthcare" />
+                </div>
+
+                <div class="modal-warning">
+                    <span class="warning-icon">⚠️</span>
+                    <span>This action cannot be undone</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-cancel" onclick="closeDeleteDomainModal()">Cancel</button>
+                <button class="modal-btn modal-btn-danger" onclick="submitDeleteDomain()">Delete Domain</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/script.js?v=13"></script>
+</body>
+</html>
