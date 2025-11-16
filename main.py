@@ -65,15 +65,15 @@ async def index(request: Request):
 
 
 
-# Include API Router
-# app.include_router(endpoints.router)
+# # Include API Router
+# # app.include_router(endpoints.router)
 
-# Include API Router (lazy load to avoid startup delays)
-@app.on_event("startup")
-async def startup_event():
-    from app.api.routes import endpoints
-    app.include_router(endpoints.router)
-    print("✅ API routes loaded successfully")
+# # Include API Router (lazy load to avoid startup delays)
+# @app.on_event("startup")
+# async def startup_event():
+#     from app.api.routes import endpoints
+#     app.include_router(endpoints.router)
+#     print("✅ API routes loaded successfully")
 
 # Mount Static Files (Must be after routes)
 app.mount("/static", StaticFiles(directory="static"), name="static")
