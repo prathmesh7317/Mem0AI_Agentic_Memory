@@ -63,6 +63,12 @@ async def index(request: Request):
     """
     return templates.TemplateResponse(request=request, name="index.html")
 
+# Health Check Endpoint (MUST be before router to work even if routes fail)
+@app.get("/health", tags=["Health"])
+async def health_check():
+    """Basic health check endpoint for Docker healthcheck"""
+    return {"status": "healthy", "service": "mem0-chatbot", "version": "1.0.0"}
+    
 
 # Include API Router
 app.include_router(endpoints.router)
