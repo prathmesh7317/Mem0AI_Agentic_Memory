@@ -17,7 +17,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
-from app.api.routes import endpoints
+# from app.api.routes import endpoints
 
 
 # FastAPI App Initialization
@@ -63,16 +63,17 @@ async def index(request: Request):
     """
     return templates.TemplateResponse(request=request, name="index.html")
 
-# Health Check Endpoint (MUST be before router to work even if routes fail)
-@app.get("/health", tags=["Health"])
-async def health_check():
-    """Basic health check endpoint for Docker healthcheck"""
-    return {"status": "healthy", "service": "mem0-chatbot", "version": "1.0.0"}
-    
+
 
 # Include API Router
-app.include_router(endpoints.router)
+# app.include_router(endpoints.router)
 
+# Include API Router (lazy load to avoid startup delays)
+@app.on_event("startup")
+async def startup_event():
+    from app.api.routes import endpoints
+    app.include_router(endpoints.router)
+    print("✅ API routes loaded successfully")
 
 # Mount Static Files (Must be after routes)
 app.mount("/static", StaticFiles(directory="static"), name="static")
