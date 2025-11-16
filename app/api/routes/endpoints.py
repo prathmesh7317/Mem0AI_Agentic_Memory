@@ -23,10 +23,26 @@ from app.services import MemoryService
 from app.utils.catalog_loader import catalog_manager
 from app.constants import HTTPStatus, ErrorMessage, SuccessMessage
 
+# router = APIRouter()
+
+# # Create memory service once at module level
+# memory_service = MemoryService()
+
 router = APIRouter()
 
-# Create memory service once at module level
-memory_service = MemoryService()
+# Memory service instance (lazy-initialized to avoid blocking on import)
+_memory_service = None
+
+def get_memory_service() -> MemoryService:
+    """
+    Lazy-initialize and return the MemoryService singleton.
+    Only creates the service when first requested, not at import time.
+    This prevents blocking the FastAPI startup event.
+    """
+    global _memory_service
+    if _memory_service is None:
+        _memory_service = MemoryService()
+    return _memory_service
 
 # CHAT ENDPOINTS
 
@@ -65,7 +81,7 @@ async def chat_endpoint(chat_request: ChatRequest):
 
         # Get response from memory service (async - non-blocking)
         # Pass domain_name to enable domain catalog context if provided
-        response = await memory_service.chat(
+        response = await get_memory_service().chat(
             chat_request.message, 
             chat_request.user_id, 
             chat_request.session_id,
@@ -113,7 +129,7 @@ async def get_memories(request: GetMemoriesRequest = Depends()):
     """
     try:
         # Fetch all memories for the user (async - non-blocking)
-        memories = await memory_service.get_all_memories(request.user_id)
+        memories = await get_memory_service().get_all_memories(request.user_id)
 
         # Return memories with count
         return MemoriesResponse(
@@ -152,7 +168,7 @@ async def clear_memories(clear_request: ClearMemoryRequest):
     """
     try:
         # Delete all memories for the user (async - non-blocking)
-        result = await memory_service.delete_all_memories(clear_request.user_id)
+        result = await get_memory_service().delete_all_memories(clear_request.user_id)
 
         # Return result
         return ClearResponse(
@@ -191,7 +207,7 @@ async def clear_session(clear_request: ClearSessionRequest):
     """
     try:
         # Clear session history from Redis
-        result = memory_service.clear_session_history(clear_request.session_id)
+        result = get_memory_service().clear_session_history(clear_request.session_id)
 
         # Return result
         return ClearResponse(
